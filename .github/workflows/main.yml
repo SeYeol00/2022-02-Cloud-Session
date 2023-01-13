@@ -1,0 +1,48 @@
+# GDSC Cloud Assignment #2
+
+name: node.js Workflow
+
+on:
+  push:
+    branches: [ "master" ]
+    
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: 798614946226.dkr.ecr.ap-northeast-2.amazonaws.com
+  ECR_REPOSITORY: 798614946226.dkr.ecr.ap-northeast-2.amazonaws.com/gdsccloud
+  IMAGE_TAG: latest
+
+jobs:
+  build-and-push-image:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [latest]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run build --if-present
+    
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+      
+      
